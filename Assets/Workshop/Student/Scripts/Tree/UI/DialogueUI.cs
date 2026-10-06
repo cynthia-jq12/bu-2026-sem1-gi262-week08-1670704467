@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+Ôªøusing System.Collections.Generic;
 using TMPro;
 using Unity.VisualScripting.Antlr3.Runtime.Tree;
 using UnityEngine;
@@ -10,43 +10,86 @@ public class DialogueUI : MonoBehaviour
     public GameObject dialoguePanel;
     public TextMeshProUGUI npcText;
     public Transform choiceContainer;
-    public Button choiceButtonPrefab; // ≈“° Prefab ªÿË¡µ—«‡≈◊Õ°¡“„ Ë
+    public Button choiceButtonPrefab;
     public GameObject closeButtonDialogue;
     private DialogueSequen InteractNpcSequen;
 
-    // ‡°Á∫ªÿË¡∑’Ë∂Ÿ° √È“ß¢÷Èπ ‡æ◊ËÕπ”‰ª∑”≈“¬/´ËÕπ„π¿“¬À≈—ß
     private List<Button> activeButtons = new List<Button>();
 
     public void Setup(DialogueSequen sequen)
     {
-        //1. Set Dialogue Sequen
+        if (sequen == null)
+        {
+            Debug.LogError("DialogueUI: sequen is null!");
+            return;
+        }
 
-        //Show UI
+        InteractNpcSequen = sequen;
+
+        if (InteractNpcSequen.tree == null)
+        {
+            InteractNpcSequen.LoadConversations();
+        }
+
+        if (InteractNpcSequen.tree == null || InteractNpcSequen.tree.root == null)
+        {
+            Debug.LogError("DialogueUI: DialogueTree or root is null!");
+            return;
+        }
+
+        DialogueNode currentNode = InteractNpcSequen.tree.root;
+        ShowDialogue(currentNode);
+
+        // Show UI
         gameObject.SetActive(true);
+        dialoguePanel.SetActive(true);
         closeButtonDialogue.SetActive(false);
     }
 
     public void ShowDialogue(DialogueNode node)
     {
-        // 2. set „ÀÈ‡ªÁπ ‚Àπ¥ª—®®ÿ∫—π
+        if (node == null) return;
 
-        // 3. · ¥ß¢ÈÕ§«“¡¢Õß NPC
+        if (InteractNpcSequen != null)
+        {
+            InteractNpcSequen.currentNode = node;
+        }
 
-        // 4. ≈È“ßªÿË¡µ—«‡≈◊Õ°‡°Ë“
+        // ‡πÅ‡∏™‡∏î‡∏á‡∏Ç‡πâ‡∏≠‡∏Ñ‡∏ß‡∏≤‡∏°‡∏Ç‡∏≠‡∏á NPC
+        if (npcText != null)
+        {
+            npcText.text = node.text;
+        }
 
-        // 5.  √È“ßªÿË¡µ—«‡≈◊Õ°„À¡Ëµ“¡ nexts
-   
+        // ‡∏•‡πâ‡∏≤‡∏á‡∏õ‡∏∏‡πà‡∏°‡∏ï‡∏±‡∏ß‡πÄ‡∏•‡∏∑‡∏≠‡∏Å‡πÄ‡∏î‡∏¥‡∏°
+        ClearChoices();
+
+        // ‡∏™‡∏£‡πâ‡∏≤‡∏á‡∏õ‡∏∏‡πà‡∏°‡∏ï‡∏±‡∏ß‡πÄ‡∏•‡∏∑‡∏≠‡∏Å‡πÉ‡∏´‡∏°‡πà‡∏à‡∏≤‡∏Å nexts
+        if (node.nexts != null)
+        {
+            var choices = new List<string>(node.nexts.Keys);
+            for (int i = 0; i < node.nexts.Count; i++)
+            {
+                string choiceText = choices[i];
+                CreateChoiceButton(choiceText, i);
+            }
+        }
     }
 
     private void CreateChoiceButton(string text, int index)
     {
+        if (choiceButtonPrefab == null || choiceContainer == null) return;
+
         Button newButton = Instantiate(choiceButtonPrefab, choiceContainer);
 
-        // µ—Èß§Ë“¢ÈÕ§«“¡∫πªÿË¡
-        newButton.GetComponentInChildren<TextMeshProUGUI>().text = text;
+        // ‡∏ï‡∏±‡πâ‡∏á‡∏Ñ‡πà‡∏≤‡∏Ç‡πâ‡∏≠‡∏Ñ‡∏ß‡∏≤‡∏°‡∏ö‡∏ô‡∏õ‡∏∏‡πà‡∏°
+        var textComp = newButton.GetComponentInChildren<TextMeshProUGUI>();
+        if (textComp != null)
+        {
+            textComp.text = text;
+        }
 
-        // ‡æ‘Ë¡ Listener ‡¡◊ËÕ°¥ªÿË¡
-        // „™È Lambda Expression ‡æ◊ËÕ Ëß index °≈—∫‰ª„ÀÈ DialogueManager
+        // ‡πÄ‡∏û‡∏¥‡πà‡∏° Listener ‡πÄ‡∏°‡∏∑‡πà‡∏≠‡∏Å‡∏î‡πÄ‡∏•‡∏∑‡∏≠‡∏Å
         newButton.onClick.AddListener(() => OnChoiceSelected(index));
 
         activeButtons.Add(newButton);
@@ -56,22 +99,36 @@ public class DialogueUI : MonoBehaviour
     {
         foreach (Button button in activeButtons)
         {
-            Destroy(button.gameObject);
+            if (button != null)
+            {
+                Destroy(button.gameObject);
+            }
         }
         activeButtons.Clear();
     }
 
     private void OnChoiceSelected(int index)
     {
-        //  Ëß index ¢Õßµ—«‡≈◊Õ°∑’ËºŸÈ‡≈Ëπ‡≈◊Õ°°≈—∫‰ª„ÀÈ DialogueManager ®—¥°“√
-        InteractNpcSequen.SelectChoice(index);
+        if (InteractNpcSequen != null)
+        {
+            InteractNpcSequen.SelectChoice(index);
+        }
     }
-    public void ShowCloseButtonDialog() {
-        closeButtonDialogue.gameObject.SetActive(true);
+
+    public void ShowCloseButtonDialog()
+    {
+        if (closeButtonDialogue != null)
+        {
+            closeButtonDialogue.gameObject.SetActive(true);
+        }
     }
+
     public void HideDialogue()
     {
-        dialoguePanel.SetActive(false);
+        if (dialoguePanel != null)
+        {
+            dialoguePanel.SetActive(false);
+        }
         ClearChoices();
     }
 }
