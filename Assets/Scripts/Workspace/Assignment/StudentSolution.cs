@@ -78,7 +78,14 @@ namespace Assignment
 
         private int Power(int baseNum, int exponent)
         {
-            return -1;
+            // base case: ถ้ากำลังเป็น 0 ได้ 1
+            if (exponent == 0)
+            {
+                return 1;
+            }
+
+            // recursive case: เอาตัวมันเองคูณกับตัวเดิมที่ลดกำลังลง 1
+            return baseNum * Power(baseNum, exponent - 1);
         }
 
         public bool ASN02_IsPalindrome(string str)
