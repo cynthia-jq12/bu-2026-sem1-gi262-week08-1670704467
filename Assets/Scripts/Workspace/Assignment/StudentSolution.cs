@@ -78,13 +78,11 @@ namespace Assignment
 
         private int Power(int baseNum, int exponent)
         {
-            // base case: ถ้ากำลังเป็น 0 ได้ 1
             if (exponent == 0)
             {
                 return 1;
             }
 
-            // recursive case: เอาตัวมันเองคูณกับตัวเดิมที่ลดกำลังลง 1
             return baseNum * Power(baseNum, exponent - 1);
         }
 
@@ -95,7 +93,17 @@ namespace Assignment
 
         private bool IsPalindrome(string str, int start, int end)
         {
-            return false;
+            if (start >= end)
+            {
+                return true;
+            }
+
+            if (str[start] != str[end])
+            {
+                return false;
+            }
+
+            return IsPalindrome(str, start + 1, end - 1);
         }
 
         public int ASN03_RecursiveGCD(int a, int b)
@@ -105,7 +113,12 @@ namespace Assignment
 
         private int GCD(int a, int b)
         {
-            return -1;
+            if (b == 0)
+            {
+                return a;
+            }
+
+            return GCD(b, a % b);
         }
 
         public int ASN04_RecursiveBinarySearch(int[] arr, int target)
