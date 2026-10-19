@@ -128,7 +128,24 @@ namespace Assignment
 
         private int BinarySearch(int[] arr, int target, int low, int high)
         {
-            return -1;
+            if (low > high)
+            {
+                return -1;
+            }
+
+            int mid = low + (high - low) / 2;
+
+            if (arr[mid] == target)
+            {
+                return mid;
+            }
+
+            if (arr[mid] > target)
+            {
+                return BinarySearch(arr, target, low, mid - 1);
+            }
+
+            return BinarySearch(arr, target, mid + 1, high);
         }
 
         #endregion
